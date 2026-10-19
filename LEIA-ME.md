@@ -43,6 +43,11 @@ funcionam, mas o GitHub recusa arquivos acima de 100 MB e o Pages fica pesado co
 
 **Link** — adicione no topo de `dados/links.js`. `destaque: true` deixa o card mais largo.
 
+**Tela de entrada conforme o clima** — com `hero.tipo: "clima"` (o padrão), o fundo muda conforme
+a hora e o tempo em Florianópolis: dia ou noite, com sol, nublado ou chuva. Coloque as seis fotos em
+`assets/img/hero/` com os nomes listados em `hero.clima.imagens` (ideal: 2400 px de largura, JPG
+abaixo de 400 KB). Enquanto uma foto não existir, aparece um degradê no tom daquele clima.
+
 **Tela de entrada em vídeo** — em `dados/site.js`, mude `hero.tipo` para `"video"` e aponte
 `hero.video` para um `.mp4` curto, sem áudio, de preferência abaixo de 8 MB.
 

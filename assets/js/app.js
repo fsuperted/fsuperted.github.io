@@ -163,6 +163,35 @@
   const loadMd = slug => mdCache[slug] ||= fetch(`conteudo/textos/${slug}.md`).then(r => { if (!r.ok) throw new Error(r.status); return r.text(); });
   const readMinutes = md => Math.max(1, Math.round(md.split(/\s+/).length / 200));
 
+  /* clima: "dia"/"noite" + "sol"/"nublado"/"chuva", via Open-Meteo (cache de 30 min) */
+  const CLIMA_NOMES = { "dia-sol": "dia-sol", "dia-nublado": "dia-nublado", "dia-chuva": "dia-chuva", "noite-sol": "noite-limpa", "noite-nublado": "noite-nublada", "noite-chuva": "noite-chuva" };
+  const ceuPorCodigo = c => (c >= 51 && c <= 67) || (c >= 80 && c <= 82) || c >= 95 ? "chuva" : c >= 3 ? "nublado" : "sol";
+  const periodoPorHora = fuso => {
+    const hora = +new Intl.DateTimeFormat("en-GB", { hour: "numeric", hourCycle: "h23", timeZone: fuso }).format(new Date());
+    return hora >= 6 && hora < 18 ? "dia" : "noite";
+  };
+  const climaAgora = async ({ latitude, longitude, fuso = "America/Sao_Paulo" }) => {
+    const chave = `ft-clima:${latitude},${longitude}`;
+    try {
+      const c = JSON.parse(localStorage.getItem(chave));
+      if (c && Date.now() - c.t < 30 * 60e3) return c.estado;
+    } catch {}
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 3500);
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=weather_code,is_day&timezone=${encodeURIComponent(fuso)}`;
+      const r = await fetch(url, { signal: ctrl.signal });
+      clearTimeout(timer);
+      if (!r.ok) throw new Error(r.status);
+      const { current } = await r.json();
+      const estado = CLIMA_NOMES[`${current.is_day ? "dia" : "noite"}-${ceuPorCodigo(current.weather_code)}`];
+      try { localStorage.setItem(chave, JSON.stringify({ t: Date.now(), estado })); } catch {}
+      return estado;
+    } catch {
+      return CLIMA_NOMES[`${periodoPorHora(fuso)}-sol`];   // sem rede: só a hora do dia
+    }
+  };
+
   /* =========================================================
      PÁGINAS
      ========================================================= */
@@ -172,18 +201,32 @@
   pages.home = () => {
     const h = site.hero || {};
     const hero = $("#hero");
-    const media = h.tipo === "video" && h.video
-      ? `<video src="${esc(h.video)}" poster="${esc(h.imagem)}" autoplay muted loop playsinline aria-hidden="true"></video>`
-      : `<img src="${esc(h.imagem)}" alt="" fetchpriority="high">`;
     const linhas = h.titulo || [site.nome];
     hero.innerHTML = `
-      <div class="hero-media">${media}</div>
+      <div class="hero-media"></div>
       <div class="wrap hero-inner">
         <h1 class="hero-title">${linhas.map((l, i) => `<span>${esc(l)}${i === linhas.length - 1 ? '<i class="sq" aria-hidden="true"></i>' : ""}</span>`).join("")}</h1>
         <p class="hero-sub">${esc(h.subtitulo || "")}</p>
       </div>
       <span class="hero-scroll" aria-hidden="true">Role</span>`;
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) $("video", hero)?.pause();
+    const heroMedia = $(".hero-media", hero);
+    if (h.tipo === "video" && h.video) {
+      heroMedia.innerHTML = `<video src="${esc(h.video)}" poster="${esc(h.imagem)}" autoplay muted loop playsinline aria-hidden="true"></video>`;
+      if (matchMedia("(prefers-reduced-motion: reduce)").matches) $("video", hero).pause();
+    } else if (h.tipo === "clima" && h.clima) {
+      climaAgora(h.clima).then(estado => {
+        heroMedia.dataset.clima = estado;
+        const src = (h.clima.imagens || {})[estado];
+        if (!src) return;
+        const img = new Image();
+        img.alt = ""; img.fetchPriority = "high";
+        img.onerror = () => img.remove();   // sem imagem: fica o degradê do clima
+        img.src = src;
+        heroMedia.append(img);
+      });
+    } else {
+      heroMedia.innerHTML = `<img src="${esc(h.imagem)}" alt="" fetchpriority="high">`;
+    }
 
     const f = fotos[0], t = textos[0], v = videos[0];
     $("#bento").innerHTML = `

@@ -12,14 +12,30 @@ FT.site = {
   cidade: "Florianópolis, SC",
 
   /* Tela de entrada.
-     tipo: "imagem" ou "video".
-     Para vídeo, use um .mp4 curto (ideal < 8 MB, sem áudio) e mantenha a
-     imagem como "poster" (aparece enquanto o vídeo carrega e em conexões lentas). */
+     tipo: "clima", "imagem" ou "video".
+     - "clima": o fundo muda conforme a hora (dia/noite) e a previsão do tempo
+       no local abaixo (sol, nublado ou chuva). Usa a API gratuita Open-Meteo,
+       sem chave. Se uma imagem não existir, aparece um degradê no tom do clima.
+     - "imagem": sempre a mesma imagem.
+     - "video": um .mp4 curto (ideal < 8 MB, sem áudio); a imagem vira "poster". */
   hero: {
-    tipo: "imagem",
-    imagem: "assets/img/hero.jpg",
+    tipo: "clima",
+    imagem: "assets/img/hero.jpg",   // reserva (e poster do vídeo)
     video: "",                       // ex.: "assets/video/hero.mp4"
-    titulo: ["Fernando", "Ted"],     // cada item vira uma linha
+    clima: {
+      latitude: -27.5954,            // Florianópolis
+      longitude: -48.5480,
+      fuso: "America/Sao_Paulo",     // UTC-3
+      imagens: {
+        "dia-sol":       "assets/img/hero/dia-sol.jpg",
+        "dia-nublado":   "assets/img/hero/dia-nublado.jpg",
+        "dia-chuva":     "assets/img/hero/dia-chuva.jpg",
+        "noite-limpa":   "assets/img/hero/noite-limpa.jpg",
+        "noite-nublada": "assets/img/hero/noite-nublada.jpg",
+        "noite-chuva":   "assets/img/hero/noite-chuva.jpg"
+      }
+    },
+    titulo: ["Fernando Ted"],        // cada item vira uma linha
     subtitulo: "Fotos, vídeos, ideias e achados — um caderno aberto."
   },
 
