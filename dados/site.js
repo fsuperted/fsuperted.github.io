@@ -27,12 +27,12 @@ FT.site = {
       longitude: -48.5480,
       fuso: "America/Sao_Paulo",     // UTC-3
       imagens: {
-        "dia-sol":       "assets/img/hero/dia-sol.jpg",
-        "dia-nublado":   "assets/img/hero/dia-nublado.jpg",
-        "dia-chuva":     "assets/img/hero/dia-chuva.jpg",
-        "noite-limpa":   "assets/img/hero/noite-limpa.jpg",
-        "noite-nublada": "assets/img/hero/noite-nublada.jpg",
-        "noite-chuva":   "assets/img/hero/noite-chuva.jpg"
+        "dia-sol":       "assets/img/fotos/dia-sol.jpg",
+        "dia-nublado":   "assets/img/fotos/dia-nublado.jpg",
+        "dia-chuva":     "assets/img/fotos/dia-chuva.jpg",
+        "noite-limpa":   "assets/img/fotos/noite-limpa.jpg",
+        "noite-nublada": "assets/img/fotos/noite-nublada.jpg",
+        "noite-chuva":   "assets/img/fotos/noite-chuva.jpg"
       }
     },
     titulo: ["Fernando Ted"],        // cada item vira uma linha

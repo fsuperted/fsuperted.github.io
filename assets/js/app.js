@@ -216,12 +216,15 @@
     } else if (h.tipo === "clima" && h.clima) {
       climaAgora(h.clima).then(estado => {
         heroMedia.dataset.clima = estado;
-        const src = (h.clima.imagens || {})[estado];
-        if (!src) return;
+        /* tenta a foto do clima exato; se faltar, a do céu limpo no mesmo período; por fim, o degradê */
+        const imagens = h.clima.imagens || {};
+        const reserva = estado.startsWith("dia") ? "dia-sol" : "noite-limpa";
+        const fila = [...new Set([imagens[estado], imagens[reserva]])].filter(Boolean);
+        if (!fila.length) return;
         const img = new Image();
         img.alt = ""; img.fetchPriority = "high";
-        img.onerror = () => img.remove();   // sem imagem: fica o degradê do clima
-        img.src = src;
+        img.onerror = () => fila.length ? (img.src = fila.shift()) : img.remove();
+        img.src = fila.shift();
         heroMedia.append(img);
       });
     } else {
