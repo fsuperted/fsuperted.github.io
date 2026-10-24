@@ -238,10 +238,10 @@
         <div class="card-body"><p class="eyebrow">Foto do dia</p><h2 class="h2">${esc(f.titulo)}</h2></div></a>` : ""}
       ${t ? `<a class="card b-text reveal" href="texto.html?t=${encodeURIComponent(t.slug)}">
         <p class="eyebrow">Último texto · ${esc(t.categoria)}</p>
-        <h2 class="h2" style="margin-top:28px">${esc(t.titulo)}</h2><p style="font-size:19px">${esc(t.resumo)}</p></a>` : ""}
+        <h2 class="h2" style="margin-top:28px">${esc(t.titulo)}</h2><p>${esc(t.resumo)}</p></a>` : ""}
       ${v ? `<a class="card card-media b-video reveal" href="videos.html">
         <img src="${esc(v.capa)}" alt="" loading="lazy"><span class="play">${PLAY}</span>
-        <div class="card-body"><p class="eyebrow" style="font-size:11px">Vídeo</p><h3 class="h3" style="font-size:22px">${esc(v.titulo)}</h3></div></a>` : ""}
+        <div class="card-body"><p class="eyebrow">Vídeo</p><h3 class="h3" style="font-size:var(--t-h4)">${esc(v.titulo)}</h3></div></a>` : ""}
       <a class="card b-links reveal" href="links.html">
         <p class="eyebrow">Achados</p>
         <div><span class="big">${links.length}</span><p>links que valem seu tempo →</p></div></a>
