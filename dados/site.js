@@ -11,6 +11,16 @@ FT.site = {
   url: "https://SEU-USUARIO.github.io",   // troque depois de publicar
   cidade: "Florianópolis, SC",
 
+  /* Nome de cada seção do site. Mudar aqui muda o menu, o rodapé, o título
+     de cada página, a aba do navegador e os rótulos da página inicial. */
+  secoes: {
+    fotos:  "Fotos",
+    videos: "Vídeos",
+    textos: "Pelos Cotovelos",
+    links:  "Take a Look",
+    sobre:  "Fernando Ted"
+  },
+
   /* Tela de entrada.
      tipo: "clima", "imagem" ou "video".
      - "clima": o fundo muda conforme a hora (dia/noite) e a previsão do tempo
@@ -35,7 +45,8 @@ FT.site = {
         "noite-chuva":   "assets/img/fotos/noite-chuva.jpg"
       }
     },
-    titulo: ["Fernando Ted"],        // cada item vira uma linha
+    /* O título e o subtítulo do banner agora vêm de dados/banner.js.
+       Esta frase só aparece se o site ainda não tiver nenhum conteúdo. */
     subtitulo: "Fotos, vídeos, ideias e achados — um caderno aberto."
   },
 

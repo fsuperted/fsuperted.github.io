@@ -30,14 +30,23 @@
   const links = (FT.links || []).slice().sort(byDate);
 
   /* ---------- navegação + rodapé ---------- */
+  /* nomes das seções: vêm de dados/site.js (secoes) */
+  const SEC = { fotos: "Fotos", videos: "Vídeos", textos: "Textos", links: "Links", sobre: "Sobre", ...site.secoes };
   const NAV = [
-    ["foto", "foto-do-dia.html", "Foto do dia"],
-    ["videos", "videos.html", "Vídeos"],
-    ["textos", "textos.html", "Textos"],
-    ["links", "links.html", "Links"],
-    ["sobre", "sobre.html", "Sobre"]
+    ["foto", "foto-do-dia.html", SEC.fotos],
+    ["videos", "videos.html", SEC.videos],
+    ["textos", "textos.html", SEC.textos],
+    ["links", "links.html", SEC.links],
+    ["sobre", "sobre.html", SEC.sobre]
   ];
   const current = page === "texto" ? "textos" : page;
+  const secaoAtual = NAV.find(([k]) => k === page);
+  if (secaoAtual) {
+    const nome = secaoAtual[2];
+    const h1 = $(".page-head h1");
+    if (h1) h1.textContent = nome;
+    document.title = nome === site.nome ? nome : `${nome} — ${site.nome}`;
+  }
   const sigla = esc(site.sigla || "FT");
 
   const header = document.createElement("header");
@@ -192,6 +201,37 @@
     }
   };
 
+  /* ---------- banner da tela de entrada (dados/banner.js) ---------- */
+  const dataCurta = iso => { const d = parseDate(iso); return `${d.getDate()} de ${MESES[d.getMonth()]}`; };
+  const BANNER_TIPOS = {
+    texto: { lista: textos, chaves: ["slug", "titulo"],
+      monta: t => ({ rotulo: `${SEC.textos} · ${t.categoria}`, titulo: t.titulo, subtitulo: t.resumo, link: `texto.html?t=${encodeURIComponent(t.slug)}`, acao: "Ler o texto" }) },
+    foto: { lista: fotos, chaves: ["data", "titulo", "arquivo"],
+      monta: f => ({ rotulo: SEC.fotos, titulo: f.titulo, subtitulo: f.legenda, link: "foto-do-dia.html", acao: "Ver a foto" }) },
+    video: { lista: videos, chaves: ["data", "titulo", "youtube", "vimeo", "arquivo"],
+      monta: v => ({ rotulo: SEC.videos, titulo: v.titulo, subtitulo: v.descricao, link: "videos.html", acao: "Assistir" }) },
+    link: { lista: links, chaves: ["url", "titulo"],
+      monta: l => ({ rotulo: `${SEC.links} · ${l.fonte}`, titulo: l.titulo, subtitulo: l.descricao, link: l.url, externo: true, acao: "Abrir o link" }) }
+  };
+  const bannerItens = () => {
+    const cfg = FT.banner || {};
+    const hoje = new Date().toLocaleDateString("sv-SE");   // AAAA-MM-DD no fuso de quem visita
+    const escolhidos = (cfg.itens || []).filter(i => !i.ate || i.ate >= hoje).map(i => {
+      if (!i.tipo) return i.titulo ? { ...i, externo: /^https?:/.test(i.link || "") } : null;
+      const T = BANNER_TIPOS[i.tipo];
+      const alvo = T && T.lista.find(x => T.chaves.some(k => x[k] && norm(x[k]) === norm(i.qual)));
+      if (!alvo) { console.warn(`Banner: não encontrei ${i.tipo} "${i.qual}" em dados/.`); return null; }
+      const item = { ...T.monta(alvo), data: alvo.data };
+      ["rotulo", "titulo", "subtitulo"].forEach(k => { if (i[k]) item[k] = i[k]; });
+      return item;
+    }).filter(Boolean);
+    if (escolhidos.length) return escolhidos;
+    /* automático: o mais recente de cada tipo, do mais novo para o mais antigo */
+    return Object.values(BANNER_TIPOS).filter(T => T.lista.length)
+      .map(T => ({ ...T.monta(T.lista[0]), data: T.lista[0].data }))
+      .sort(byDate).slice(0, cfg.quantidade || 4);
+  };
+
   /* =========================================================
      PÁGINAS
      ========================================================= */
@@ -201,14 +241,41 @@
   pages.home = () => {
     const h = site.hero || {};
     const hero = $("#hero");
-    const linhas = h.titulo || [site.nome];
+    const slides = bannerItens();
+    if (!slides.length) slides.push({ titulo: site.nome, subtitulo: h.subtitulo || site.descricao || "" });
+    const slideHTML = (s, i) => {
+      const tag = s.link ? "a" : "div";
+      const attrs = s.link ? ` href="${esc(s.link)}"${s.externo ? ' target="_blank" rel="noopener"' : ""}` : "";
+      const rotulo = [s.rotulo, s.data && dataCurta(s.data)].filter(Boolean).join(" · ");
+      return `<${tag} class="hero-slide${i ? "" : " is-active"}"${attrs}${i ? " inert" : ""}>
+          ${rotulo ? `<p class="eyebrow">${esc(rotulo)}</p>` : ""}
+          <h2 class="hero-title">${esc(s.titulo)}<i class="sq" aria-hidden="true"></i></h2>
+          ${s.subtitulo ? `<p class="hero-sub">${esc(s.subtitulo)}</p>` : ""}
+          ${s.link ? `<span class="hero-cta">${esc(s.acao || "Saiba mais")} ${s.externo ? "↗" : "→"}</span>` : ""}
+        </${tag}>`;
+    };
     hero.innerHTML = `
       <div class="hero-media"></div>
       <div class="wrap hero-inner">
-        <h1 class="hero-title">${linhas.map((l, i) => `<span>${esc(l)}${i === linhas.length - 1 ? '<i class="sq" aria-hidden="true"></i>' : ""}</span>`).join("")}</h1>
-        <p class="hero-sub">${esc(h.subtitulo || "")}</p>
+        <h1 class="sr-only">${esc(site.nome)}</h1>
+        <div class="hero-slides" role="region" aria-roledescription="carrossel" aria-label="Destaques">${slides.map(slideHTML).join("")}</div>
+        ${slides.length > 1 ? `<div class="hero-dots">${slides.map((_, i) => `<button type="button" aria-label="Destaque ${i + 1} de ${slides.length}"${i ? "" : ' aria-current="true"'}></button>`).join("")}</div>` : ""}
       </div>
       <span class="hero-scroll" aria-hidden="true">Role</span>`;
+
+    /* alterna os destaques; pausa com o mouse ou o foco em cima, com a aba escondida e com "reduzir movimento" */
+    const els = $$(".hero-slide", hero), dots = $$(".hero-dots button", hero);
+    let atual = 0;
+    const mostrar = n => {
+      atual = (n + els.length) % els.length;
+      els.forEach((el, i) => { el.classList.toggle("is-active", i === atual); el.inert = i !== atual; });
+      dots.forEach((d, i) => i === atual ? d.setAttribute("aria-current", "true") : d.removeAttribute("aria-current"));
+    };
+    dots.forEach((d, i) => d.addEventListener("click", () => mostrar(i)));
+    const seg = +((FT.banner || {}).intervalo ?? 8);
+    const pausado = () => document.hidden || $$(".hero-slides, .hero-dots", hero).some(el => el.matches(":hover, :focus-within"));
+    if (els.length > 1 && seg > 0 && !matchMedia("(prefers-reduced-motion: reduce)").matches)
+      setInterval(() => { if (!pausado()) mostrar(atual + 1); }, seg * 1000);
     const heroMedia = $(".hero-media", hero);
     if (h.tipo === "video" && h.video) {
       heroMedia.innerHTML = `<video src="${esc(h.video)}" poster="${esc(h.imagem)}" autoplay muted loop playsinline aria-hidden="true"></video>`;
@@ -235,15 +302,15 @@
     $("#bento").innerHTML = `
       ${f ? `<a class="card card-media b-photo reveal" href="foto-do-dia.html">
         <img src="${esc(f.arquivo)}" alt="${esc(f.titulo)}" loading="lazy">
-        <div class="card-body"><p class="eyebrow">Foto do dia</p><h2 class="h2">${esc(f.titulo)}</h2></div></a>` : ""}
+        <div class="card-body"><p class="eyebrow">${esc(SEC.fotos)}</p><h2 class="h2">${esc(f.titulo)}</h2></div></a>` : ""}
       ${t ? `<a class="card b-text reveal" href="texto.html?t=${encodeURIComponent(t.slug)}">
-        <p class="eyebrow">Último texto · ${esc(t.categoria)}</p>
+        <p class="eyebrow">${esc(SEC.textos)} · ${esc(t.categoria)}</p>
         <h2 class="h2" style="margin-top:28px">${esc(t.titulo)}</h2><p>${esc(t.resumo)}</p></a>` : ""}
       ${v ? `<a class="card card-media b-video reveal" href="videos.html">
         <img src="${esc(v.capa)}" alt="" loading="lazy"><span class="play">${PLAY}</span>
-        <div class="card-body"><p class="eyebrow">Vídeo</p><h3 class="h3" style="font-size:var(--t-h4)">${esc(v.titulo)}</h3></div></a>` : ""}
+        <div class="card-body"><p class="eyebrow">${esc(SEC.videos)}</p><h3 class="h3" style="font-size:var(--t-h4)">${esc(v.titulo)}</h3></div></a>` : ""}
       <a class="card b-links reveal" href="links.html">
-        <p class="eyebrow">Achados</p>
+        <p class="eyebrow">${esc(SEC.links)}</p>
         <div><span class="big">${links.length}</span><p>links que valem seu tempo →</p></div></a>
       <div class="card b-topics reveal">
         <p class="eyebrow">Escrevendo sobre</p>
@@ -251,6 +318,7 @@
       </div>
       <a class="card b-about reveal" href="sobre.html"><h3 class="h3">Quem<br>escreve? →</h3></a>`;
     $("#recentes").innerHTML = textos.slice(0, 5).map(rowItem).join("");
+    $("#mais-textos").textContent = `Mais em ${SEC.textos}`;
   };
 
   /* ---------- Foto do dia ---------- */
@@ -364,12 +432,12 @@
     const t = textos[i];
     const head = $("#post-head"), body = $("#post-body");
     if (!t) {
-      head.innerHTML = `<a class="back" href="textos.html">← Todos os textos</a><h1 class="h2">Texto não encontrado.</h1>`;
+      head.innerHTML = `<a class="back" href="textos.html">← ${esc(SEC.textos)}</a><h1 class="h2">Texto não encontrado.</h1>`;
       body.innerHTML = ""; return;
     }
     document.title = `${t.titulo} — ${site.nome}`;
     $('meta[name="description"]')?.setAttribute("content", t.resumo);
-    head.innerHTML = `<a class="back" href="textos.html">← Todos os textos</a>
+    head.innerHTML = `<a class="back" href="textos.html">← ${esc(SEC.textos)}</a>
       <a class="eyebrow" href="textos.html?c=${slugify(t.categoria)}" style="display:inline-block">${esc(t.categoria)}</a>
       <h1 class="h2">${esc(t.titulo)}</h1>
       <p class="lead">${esc(t.resumo)}</p>
@@ -429,10 +497,10 @@
         <div class="socials">${(site.redes || []).map(r => `<a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.nome)} ↗</a>`).join("")}</div>
       </div>
       <div class="pillars">
-        <a class="card reveal" href="foto-do-dia.html"><h3 class="h3">Foto do dia</h3><p>Um registro diário${fotos.length ? `, desde ${parseDate(fotos[fotos.length - 1].data).getFullYear()}` : ""}.</p></a>
-        <a class="card reveal" href="videos.html"><h3 class="h3">Vídeos curtos</h3><p>Experimentos visuais sem roteiro.</p></a>
-        <a class="card reveal" href="textos.html"><h3 class="h3">Ensaios</h3><p>${esc((FT.categorias || []).join(", ").replace(/, ([^,]*)$/, " e $1"))}.</p></a>
-        <a class="card reveal" href="links.html"><h3 class="h3">Curadoria</h3><p>Links que valem compartilhar.</p></a>
+        <a class="card reveal" href="foto-do-dia.html"><h3 class="h3">${esc(SEC.fotos)}</h3><p>Um registro diário${fotos.length ? `, desde ${parseDate(fotos[fotos.length - 1].data).getFullYear()}` : ""}.</p></a>
+        <a class="card reveal" href="videos.html"><h3 class="h3">${esc(SEC.videos)}</h3><p>Experimentos visuais sem roteiro.</p></a>
+        <a class="card reveal" href="textos.html"><h3 class="h3">${esc(SEC.textos)}</h3><p>${esc((FT.categorias || []).join(", ").replace(/, ([^,]*)$/, " e $1"))}.</p></a>
+        <a class="card reveal" href="links.html"><h3 class="h3">${esc(SEC.links)}</h3><p>Links que valem compartilhar.</p></a>
       </div>`;
   };
 

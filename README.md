@@ -7,17 +7,18 @@ Hospedagem gratuita no **GitHub Pages**.
 
 ```
 index.html            Início (tela de entrada + destaques + recentes)
-foto-do-dia.html      Foto de hoje + arquivo com ampliação (lightbox)
+foto-do-dia.html      Fotos: a mais recente + arquivo com ampliação (lightbox)
 videos.html           Vídeo em destaque + lista
-textos.html           Blog: filtros por categoria + busca
+textos.html           Pelos Cotovelos (blog): filtros por categoria + busca
 texto.html            Leitura de um texto (texto.html?t=slug)
-links.html            Achados, com filtro por tipo
-sobre.html            Sobre você
+links.html            Take a Look (achados), com filtro por tipo
+sobre.html            Fernando Ted (sobre você)
 404.html              Página de erro
 
 dados/                ← É AQUI QUE VOCÊ EDITA O CONTEÚDO
-  site.js             nome, tela de entrada, redes, texto do "Sobre"
-  fotos.js            foto do dia
+  site.js             nome, nomes das seções, fundo da tela de entrada, redes, texto do "Sobre"
+  banner.js           título e subtítulo da tela de entrada (automático ou escolhido)
+  fotos.js            fotos
   videos.js           vídeos (YouTube, Vimeo ou .mp4)
   textos.js           lista de textos e categorias
   links.js            achados
@@ -29,7 +30,7 @@ assets/img/           imagens
 
 ## Publicar no dia a dia
 
-**Foto do dia** — salve o JPG em `assets/img/fotos/` (lado maior ~1800 px, qualidade ~80)
+**Foto** — salve o JPG em `assets/img/fotos/` (lado maior ~1800 px, qualidade ~80)
 e adicione um bloco no topo de `dados/fotos.js`.
 
 **Texto novo** — crie `conteudo/textos/meu-texto.md` e adicione em `dados/textos.js`:
@@ -43,10 +44,21 @@ funcionam, mas o GitHub recusa arquivos acima de 100 MB e o Pages fica pesado co
 
 **Link** — adicione no topo de `dados/links.js`. `destaque: true` deixa o card mais largo.
 
-**Tela de entrada conforme o clima** — com `hero.tipo: "clima"` (o padrão), o fundo muda conforme
+**Nomes das seções** — ficam em `secoes`, no topo de `dados/site.js`. Mudar ali atualiza o menu,
+o rodapé, o título de cada página e os rótulos da página inicial. Só o `<title>` dentro de cada
+arquivo `.html` precisa ser trocado à mão, porque é ele que aparece nas prévias de link no WhatsApp
+e nas redes.
+
+**Título e subtítulo da tela de entrada** — ficam em `dados/banner.js`. Com a lista `itens` vazia,
+o banner alterna sozinho entre a última foto, o último vídeo, o último texto e o último link. Para
+escolher o que aparece, liste os itens ali (as instruções estão no próprio arquivo); dá para trocar
+o texto, criar um aviso livre e marcar até quando cada item fica no ar.
+
+**Fundo da tela de entrada conforme o clima** — com `hero.tipo: "clima"` (o padrão), o fundo muda conforme
 a hora e o tempo em Florianópolis: dia ou noite, com sol, nublado ou chuva. Coloque as seis fotos em
-`assets/img/hero/` com os nomes listados em `hero.clima.imagens` (ideal: 2400 px de largura, JPG
-abaixo de 400 KB). Enquanto uma foto não existir, aparece um degradê no tom daquele clima.
+`assets/img/fotos/` com os nomes listados em `hero.clima.imagens` (ideal: 2400 px de largura, JPG
+abaixo de 400 KB). Se faltar a foto de um clima, entra a de céu limpo do mesmo período; se faltar
+também, aparece um degradê no tom daquele clima.
 
 **Tela de entrada em vídeo** — em `dados/site.js`, mude `hero.tipo` para `"video"` e aponte
 `hero.video` para um `.mp4` curto, sem áudio, de preferência abaixo de 8 MB.

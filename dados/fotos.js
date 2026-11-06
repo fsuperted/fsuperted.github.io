@@ -1,5 +1,5 @@
 /* =========================================================
-   FOTO DO DIA
+   FOTOS
    Para publicar: coloque a imagem em assets/img/fotos/ e
    adicione um item NO TOPO da lista (a mais recente primeiro).
    Dica: exporte em JPG, lado maior ~1600–2000 px, qualidade ~80.
